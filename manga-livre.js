@@ -1,36 +1,54 @@
 // manga-livre:0.0.1
 
-import { parse } from "react-native-html-parser";
-
 const fetchMangas = async () => {
   try {
-    // Fetch a página HTML do Manga Livre
     const response = await fetch("https://mangalivre.tv/");
     const html = await response.text();
+    const $ = cheerio.load(html); // Carregar o HTML
+    let mangas = [];
 
-    // Utiliza o react-native-html-parser para parsear o HTML
-    const document = parse(html);
+    $(".manga__item").each((index, element) => {
+      // Título e link
+      const title = $(element).find(".post-title h2 a").text().trim();
+      const link = $(element).find(".post-title h2 a").attr("href");
 
-    // Extrair informações dos mangas
-    const mangas = [];
-    const mangaItems = document.querySelectorAll(".manga__item");
+      // Imagem
+      const img = $(element).find(".manga__thumb_item img").attr("src");
 
-    mangaItems.forEach((item) => {
-      const title = item.querySelector(".post-title h2 a").text.trim();
-      const link = item.querySelector(".post-title h2 a").attrs.href;
-      const img = item.querySelector(".manga__thumb_item img").attrs.src;
-      const description = item.querySelector(".manga-excerpt p").text.trim();
+      // Descrição
+      const description = $(element).find(".manga-excerpt p").text().trim();
 
+      // Total de capítulos (extraindo apenas o número)
+      const totalChaptersText = $(element)
+        .find(".manga-info .total")
+        .text()
+        .trim();
+      // Extrair apenas os números do texto "90 Capitulos"
+      const totalChapters = totalChaptersText.replace(/[^0-9]/g, "");
+
+      // Gêneros
+      const genres = [];
+      $(element)
+        .find(".manga-genres .genre-item a")
+        .each((_, genreElement) => {
+          genres.push($(genreElement).text().trim());
+        });
+
+      // Adicionando a estrutura do manga sem a lista de capítulos
       mangas.push({
         title,
         link,
         img,
         description,
+        totalChapters,
+        genres,
       });
     });
 
-    console.log(mangas);
+    setMangaList(mangas);
+    return mangas;
   } catch (error) {
     console.error("Erro ao buscar os dados:", error);
+    return [];
   }
 };
