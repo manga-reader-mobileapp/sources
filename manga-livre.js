@@ -1,3 +1,5 @@
+// manga-livre:0.0.1
+
 import { parse } from "react-native-html-parser";
 
 const fetchMangas = async () => {
